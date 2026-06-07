@@ -42,7 +42,7 @@ export default async function SchedulePage() {
         </div>
         <div className="p-4 grid grid-cols-2 gap-3">
           {/* Simple */}
-          <form action={switchToSimpleMode}>
+          <form action={async () => { 'use server'; await switchToSimpleMode() }}>
             <button type="submit" className="w-full text-left">
               <div className={cn(
                 'p-4 rounded-2xl cursor-pointer transition-all',
@@ -67,7 +67,7 @@ export default async function SchedulePage() {
           </form>
 
           {/* Bloques */}
-          <form action={switchToBlocksMode}>
+          <form action={async () => { 'use server'; await switchToBlocksMode() }}>
             <button type="submit" className="w-full text-left">
               <div className={cn(
                 'p-4 rounded-2xl cursor-pointer transition-all',

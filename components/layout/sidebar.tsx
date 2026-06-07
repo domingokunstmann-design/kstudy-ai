@@ -26,7 +26,7 @@ export function Sidebar({ pendingCount = 0 }: SidebarProps) {
   const pathname = usePathname()
 
   return (
-    <aside className="sidebar">
+    <aside className="sidebar hidden lg:flex lg:flex-col">
       {/* ── Logo ── */}
       <div className="relative flex items-center gap-3 px-5 pt-6 pb-5">
         {/* Icono */}

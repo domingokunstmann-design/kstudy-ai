@@ -1,6 +1,7 @@
 import { redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
 import { Sidebar } from '@/components/layout/sidebar'
+import { MobileNav } from '@/components/layout/mobile-nav'
 import { UserMenu } from '@/components/layout/user-menu'
 import type { Profile } from '@/types'
 
@@ -30,12 +31,13 @@ export default async function DashboardLayout({ children }: DashboardLayoutProps
 
   return (
     <div className="flex h-screen overflow-hidden" style={{ background: 'var(--bg)' }}>
+      {/* Sidebar — solo desktop */}
       <Sidebar pendingCount={pendingCount ?? 0} />
 
       <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
         {/* Topbar */}
         <header
-          className="h-13 flex items-center justify-end px-6 flex-shrink-0"
+          className="flex items-center justify-end px-4 lg:px-6 flex-shrink-0"
           style={{
             height: 52,
             borderBottom: '1px solid var(--border)',
@@ -47,14 +49,17 @@ export default async function DashboardLayout({ children }: DashboardLayoutProps
           <UserMenu profile={profile as Profile} />
         </header>
 
-        {/* Contenido */}
+        {/* Contenido — padding bottom en móvil para el bottom nav */}
         <main
-          className="flex-1 overflow-y-auto"
+          className="flex-1 overflow-y-auto pb-20 lg:pb-0"
           style={{ background: 'var(--bg)' }}
         >
           {children}
         </main>
       </div>
+
+      {/* Bottom nav — solo móvil */}
+      <MobileNav pendingCount={pendingCount ?? 0} />
     </div>
   )
 }

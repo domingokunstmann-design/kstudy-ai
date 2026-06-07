@@ -41,7 +41,7 @@ export default async function DashboardPage() {
   ]
 
   return (
-    <div className="p-7 max-w-5xl mx-auto space-y-7 animate-fade-in">
+    <div className="p-4 lg:p-7 max-w-5xl mx-auto space-y-5 lg:space-y-7 animate-fade-in">
 
       {/* Header */}
       <div className="flex items-end justify-between gap-4">

@@ -1,5 +1,6 @@
 import type { Metadata } from 'next'
 import Link from 'next/link'
+import Image from 'next/image'
 
 export const metadata: Metadata = {
   title: 'Política de Privacidad',
@@ -17,12 +18,7 @@ export default function PrivacyPage() {
         style={{ borderColor: 'rgba(255,255,255,0.06)', background: 'rgba(255,255,255,0.02)' }}
       >
         <Link href="/" className="flex items-center gap-2">
-          <div
-            className="w-7 h-7 rounded-lg flex items-center justify-center text-sm font-bold"
-            style={{ background: 'linear-gradient(135deg,#7c6af7,#9b8dff)', color: '#fff' }}
-          >
-            K
-          </div>
+          <Image src="/logo.png" alt="Kstudy AI" width={28} height={28} className="rounded-lg" />
           <span className="text-sm font-semibold" style={{ color: 'var(--text-primary)' }}>
             Kstudy <span style={{ color: 'var(--accent-light)' }}>AI</span>
           </span>

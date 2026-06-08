@@ -1,6 +1,7 @@
 import { Metadata } from 'next'
 import { signInWithGoogle } from '@/lib/actions/auth'
-import { BookOpen, Sparkles, Mail, Calendar, CheckSquare } from 'lucide-react'
+import { BookOpen, Mail, Calendar, CheckSquare } from 'lucide-react'
+import Image from 'next/image'
 
 export const metadata: Metadata = {
   title: 'Iniciar sesión',
@@ -49,9 +50,7 @@ export default async function LoginPage({ searchParams }: LoginPageProps) {
 
         {/* Logo */}
         <div className="relative flex items-center gap-2.5">
-          <div className="w-8 h-8 rounded-lg bg-indigo-500 flex items-center justify-center">
-            <Sparkles className="w-4 h-4 text-white" />
-          </div>
+          <Image src="/logo.png" alt="Kstudy AI" width={36} height={36} className="rounded-lg" />
           <span className="text-lg font-semibold text-zinc-100 tracking-tight">
             Kstudy AI
           </span>
@@ -114,9 +113,7 @@ export default async function LoginPage({ searchParams }: LoginPageProps) {
         <div className="relative w-full max-w-sm space-y-8">
           {/* Logo mobile */}
           <div className="flex items-center gap-2.5 lg:hidden">
-            <div className="w-8 h-8 rounded-lg bg-indigo-500 flex items-center justify-center">
-              <Sparkles className="w-4 h-4 text-white" />
-            </div>
+            <Image src="/logo.png" alt="Kstudy AI" width={36} height={36} className="rounded-lg" />
             <span className="text-lg font-semibold text-zinc-100 tracking-tight">
               Kstudy AI
             </span>

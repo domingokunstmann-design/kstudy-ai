@@ -37,7 +37,7 @@ export async function GET(request: NextRequest) {
       .from('tasks')
       .select(`
         id, title, type, course_name, due_date, user_id,
-        profiles!inner(full_name, email),
+        profiles!inner(full_name, email, reminders_enabled),
         reminder_logs(id)
       `)
       .in('status', ['pendiente', 'en_progreso'])
@@ -50,6 +50,7 @@ export async function GET(request: NextRequest) {
     for (const task of tasks ?? []) {
       const profile = Array.isArray(task.profiles) ? task.profiles[0] : task.profiles
       if (!profile?.email) continue
+      if (profile.reminders_enabled === false) continue
 
       const dueDateFormatted = format(new Date(task.due_date), "EEEE d 'de' MMMM", { locale: es })
 

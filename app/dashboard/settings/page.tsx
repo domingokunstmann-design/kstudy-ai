@@ -1,9 +1,10 @@
 import { Metadata } from 'next'
 import { createClient } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'
-import { Settings, User } from 'lucide-react'
+import { Settings, User, Bell } from 'lucide-react'
 import { SyncButton } from '@/components/gmail/sync-button'
 import { CalendarSyncButton } from '@/components/settings/calendar-sync-button'
+import { RemindersToggle } from '@/components/settings/reminders-toggle'
 import { formatRelativeDate, getInitials } from '@/lib/utils'
 import Image from 'next/image'
 import type { Profile } from '@/types'
@@ -140,6 +141,25 @@ export default async function SettingsPage() {
               )}
             </div>
           ))}
+        </div>
+      </div>
+
+      {/* Recordatorios */}
+      <div className="section-card">
+        <div className="section-header">
+          <div className="flex items-center gap-2">
+            <Bell className="w-4 h-4 text-white/30" />
+            <h2 className="text-sm font-semibold text-white">Notificaciones</h2>
+          </div>
+        </div>
+        <div className="p-5 flex items-center justify-between gap-4">
+          <div>
+            <p className="text-sm font-semibold text-white">Recordatorios por email</p>
+            <p className="text-xs text-white/35 mt-0.5">
+              Te avisamos 7 días, 1 día y el mismo día que vence una tarea
+            </p>
+          </div>
+          <RemindersToggle enabled={p?.reminders_enabled ?? true} />
         </div>
       </div>
 

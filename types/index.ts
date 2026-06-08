@@ -40,6 +40,7 @@ export interface Profile {
   gmail_sync_token: string | null  // Gmail historyId para sync incremental
   last_gmail_sync: string | null
   last_classroom_sync: string | null
+  reminders_enabled: boolean
   created_at: string
   updated_at: string
 }

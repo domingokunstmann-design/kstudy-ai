@@ -61,11 +61,11 @@ export default function PrivacyPage() {
             <p className="mt-3">
               Si tienes preguntas sobre esta política, puedes contactarnos en{' '}
               <a
-                href="mailto:coni@conisapag.com"
+                href="mailto:domingo.kunstmann@gmail.com"
                 className="underline"
                 style={{ color: 'var(--accent-light)' }}
               >
-                coni@conisapag.com
+                domingo.kunstmann@gmail.com
               </a>
               .
             </p>
@@ -215,8 +215,8 @@ export default function PrivacyPage() {
             <p>
               Conservamos tus datos mientras tu cuenta esté activa. Puedes solicitar la eliminación completa de tu
               cuenta y todos tus datos en cualquier momento escribiendo a{' '}
-              <a href="mailto:coni@conisapag.com" className="underline" style={{ color: 'var(--accent-light)' }}>
-                coni@conisapag.com
+              <a href="mailto:domingo.kunstmann@gmail.com" className="underline" style={{ color: 'var(--accent-light)' }}>
+                domingo.kunstmann@gmail.com
               </a>
               . Procesamos las solicitudes en un plazo máximo de 30 días.
             </p>
@@ -262,8 +262,8 @@ export default function PrivacyPage() {
             </h2>
             <p>
               Si tienes preguntas, dudas o solicitudes relacionadas con tu privacidad, contáctanos en:{' '}
-              <a href="mailto:coni@conisapag.com" className="underline" style={{ color: 'var(--accent-light)' }}>
-                coni@conisapag.com
+              <a href="mailto:domingo.kunstmann@gmail.com" className="underline" style={{ color: 'var(--accent-light)' }}>
+                domingo.kunstmann@gmail.com
               </a>
             </p>
           </section>
@@ -279,6 +279,8 @@ export default function PrivacyPage() {
         <p className="text-xs" style={{ color: 'var(--text-muted)' }}>
           © {new Date().getFullYear()} Kstudy AI ·{' '}
           <Link href="/privacy" className="underline hover:opacity-80">Política de Privacidad</Link>
+          {' · '}
+          <Link href="/terms" className="underline hover:opacity-80">Términos de Servicio</Link>
         </p>
       </footer>
     </div>

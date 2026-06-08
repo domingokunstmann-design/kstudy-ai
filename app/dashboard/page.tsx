@@ -6,6 +6,7 @@ import Link from 'next/link'
 import { formatDueDate, getDaysUntilDue, cn } from '@/lib/utils'
 import { TASK_TYPE_CONFIG, PRIORITY_CONFIG } from '@/types'
 import type { Task } from '@/types'
+import { OnboardingBanner } from '@/components/onboarding/onboarding-banner'
 
 export const metadata: Metadata = { title: 'Dashboard' }
 export const revalidate = 300
@@ -67,6 +68,11 @@ export default async function DashboardPage() {
           </div>
         )}
       </div>
+
+      {/* Onboarding — solo si no hay tareas aún */}
+      {(pendingCount ?? 0) === 0 && (completedWeekCount ?? 0) === 0 && (
+        <OnboardingBanner />
+      )}
 
       {/* Stats */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">

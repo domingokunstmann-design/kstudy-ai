@@ -12,11 +12,25 @@ export const metadata: Metadata = {
     'Asistente académico inteligente para estudiantes. Detecta tareas, pruebas y fechas desde tu Gmail y Google Classroom automáticamente.',
   keywords: ['estudio', 'académico', 'tareas', 'calendario', 'Gmail', 'Classroom'],
   authors: [{ name: 'Kstudy AI' }],
+  manifest: '/manifest.json',
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: 'black-translucent',
+    title: 'Kstudy AI',
+  },
+  icons: {
+    icon: '/icon-192.png',
+    apple: '/icon-192.png',
+  },
 }
 
 export const viewport: Viewport = {
-  themeColor: '#09090f',
+  themeColor: '#7c6af7',
   colorScheme: 'dark',
+  width: 'device-width',
+  initialScale: 1,
+  maximumScale: 1,
+  userScalable: false,
 }
 
 export default function RootLayout({

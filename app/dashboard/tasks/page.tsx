@@ -1,9 +1,10 @@
 import { Metadata } from 'next'
 import { createClient } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'
-import { CheckSquare, Plus } from 'lucide-react'
+import { CheckSquare } from 'lucide-react'
 import { SyncButton } from '@/components/gmail/sync-button'
 import { TaskCard } from '@/components/tasks/task-card'
+import { NewTaskButton } from '@/components/tasks/new-task-button'
 import type { Task, Email } from '@/types'
 
 export const metadata: Metadata = { title: 'Tareas' }
@@ -46,6 +47,7 @@ export default async function TasksPage() {
         </div>
         <div className="flex items-center gap-2">
           <SyncButton />
+          <NewTaskButton />
         </div>
       </div>
 

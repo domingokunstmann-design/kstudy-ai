@@ -126,7 +126,7 @@ export async function sendReminderEmail(
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        from: 'Kstudy AI <recordatorios@kstudy.ai>',
+        from: 'Kstudy AI <onboarding@resend.dev>',
         to: [to],
         subject: getReminderSubject(task),
         html: getReminderHtml(task, userName),

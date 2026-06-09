@@ -1,12 +1,12 @@
 // ============================================
-// Kstudy AI — Cliente Gemini 1.5 Flash
+// Kstudy AI — Cliente Gemini 2.0 Flash
 // ============================================
 // API key en .env.local: GEMINI_API_KEY=...
 // Se consigue gratis en https://aistudio.google.com
 // ============================================
 
 const GEMINI_API_URL =
-  'https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent'
+  'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent'
 
 export interface GeminiRequest {
   prompt: string

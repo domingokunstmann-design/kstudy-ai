@@ -78,7 +78,7 @@ export default async function CalendarPage({ searchParams }: PageProps) {
     // Períodos escolares (sin filtro de fecha — son por día de la semana)
     supabase
       .from('school_periods')
-      .select('subject, period_type, start_time, end_time, day_of_week')
+      .select('subject, period_type, start_time, end_time, day_of_week, color')
       .eq('user_id', user.id),
 
     // Rutinas activas
@@ -118,6 +118,7 @@ export default async function CalendarPage({ searchParams }: PageProps) {
           tasks={typedTasks}
           sessions={typedSessions}
           periods={typedPeriods}
+          routines={typedRoutines}
           date={currentDate}
         />
       )}

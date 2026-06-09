@@ -1,5 +1,6 @@
+'use client'
+
 import { cn } from '@/lib/utils'
-import { TASK_TYPE_CONFIG } from '@/types'
 import type { Task } from '@/types'
 import { format, startOfWeek, addDays, isSameDay, isToday } from 'date-fns'
 import { es } from 'date-fns/locale'
@@ -22,18 +23,27 @@ interface SchoolPeriod {
   color?: string | null
 }
 
+interface Routine {
+  name: string
+  start_time: string
+  end_time: string
+  color: string
+  day_of_week: number
+}
+
 interface WeeklyViewProps {
   tasks: Task[]
   sessions: StudySession[]
   periods: SchoolPeriod[]
+  routines: Routine[]
   date: Date
 }
 
 const HOURS = Array.from({ length: 15 }, (_, i) => i + 7) // 7:00 – 21:00
 const TOTAL_HOURS = 15
-const CELL_HEIGHT = 64 // px por hora — más espacio = bloques más legibles
+const CELL_HEIGHT = 64
 
-// Paleta de colores para asignaturas (determinista por nombre)
+// Paleta fallback (cuando no hay color guardado)
 const SUBJECT_PALETTE = [
   { bg: 'rgba(99,102,241,0.2)',  border: 'rgba(99,102,241,0.5)',  text: '#c7d2fe', bar: '#6366f1' },
   { bg: 'rgba(168,85,247,0.2)', border: 'rgba(168,85,247,0.5)', text: '#e9d5ff', bar: '#a855f7' },
@@ -53,16 +63,45 @@ const SPECIAL: Record<string, { bg: string; border: string; text: string; bar: s
   free:  { bg: 'rgba(100,116,139,0.08)', border: 'rgba(100,116,139,0.2)', text: '#94a3b8', bar: '#64748b' },
 }
 
+const ROUTINE_COLORS: Record<string, string> = {
+  indigo:  '#6366f1',
+  violet:  '#8b5cf6',
+  emerald: '#10b981',
+  amber:   '#f59e0b',
+  rose:    '#f43f5e',
+  sky:     '#0ea5e9',
+}
+
 function hashSubject(subject: string): number {
   let h = 0
   for (const c of subject) h = (Math.imul(31, h) + c.charCodeAt(0)) | 0
   return Math.abs(h)
 }
 
+function hexToRgba(hex: string, alpha: number): string {
+  const h = hex.replace('#', '')
+  const r = parseInt(h.slice(0, 2), 16)
+  const g = parseInt(h.slice(2, 4), 16)
+  const b = parseInt(h.slice(4, 6), 16)
+  return `rgba(${r},${g},${b},${alpha})`
+}
+
 function getPeriodColor(period: SchoolPeriod) {
   if (period.period_type === 'break') return SPECIAL.break
   if (period.period_type === 'lunch') return SPECIAL.lunch
   if (period.period_type === 'free')  return SPECIAL.free
+
+  // Usar el color guardado en DB si existe
+  if (period.color) {
+    return {
+      bg:     hexToRgba(period.color, 0.2),
+      border: hexToRgba(period.color, 0.5),
+      text:   '#ffffff',
+      bar:    period.color,
+    }
+  }
+
+  // Fallback: hash por nombre de asignatura
   const key = period.subject ?? period.period_type
   return SUBJECT_PALETTE[hashSubject(key) % SUBJECT_PALETTE.length]
 }
@@ -85,9 +124,8 @@ function periodLabel(p: SchoolPeriod): string {
   return p.subject ?? p.period_type
 }
 
-export function WeeklyView({ tasks, sessions, periods, date }: WeeklyViewProps) {
+export function WeeklyView({ tasks, sessions, periods, routines, date }: WeeklyViewProps) {
   const weekStart = startOfWeek(date, { weekStartsOn: 1 })
-  // Mostrar Lun-Sáb (6 columnas), ocultar Dom si está vacío
   const weekDays = Array.from({ length: 6 }, (_, i) => addDays(weekStart, i))
 
   const getTasksForDay = (day: Date) =>
@@ -97,8 +135,14 @@ export function WeeklyView({ tasks, sessions, periods, date }: WeeklyViewProps) 
     sessions.filter(s => isSameDay(new Date(s.start_time), day))
 
   const getPeriodsForDay = (day: Date) => {
-    const dow = (day.getDay() + 6) % 7 + 1
+    // day.getDay(): 0=Dom,1=Lun,...,6=Sáb → convertir a lun=1
+    const dow = day.getDay() === 0 ? 7 : day.getDay()
     return periods.filter(p => p.day_of_week === dow)
+  }
+
+  const getRoutinesForDay = (day: Date) => {
+    const dow = day.getDay() === 0 ? 7 : day.getDay()
+    return routines.filter(r => r.day_of_week === dow)
   }
 
   const totalHeight = CELL_HEIGHT * TOTAL_HOURS
@@ -109,7 +153,7 @@ export function WeeklyView({ tasks, sessions, periods, date }: WeeklyViewProps) 
 
         {/* Columna de horas */}
         <div className="flex-shrink-0 w-12 border-r" style={{ borderColor: 'rgba(255,255,255,0.06)' }}>
-          <div style={{ height: 44 }} /> {/* Header spacer */}
+          <div style={{ height: 44 }} />
           {HOURS.map(h => (
             <div key={h} className="flex items-start justify-end pr-2"
               style={{ height: CELL_HEIGHT }}>
@@ -123,11 +167,12 @@ export function WeeklyView({ tasks, sessions, periods, date }: WeeklyViewProps) 
         {/* Columnas de días */}
         <div className="flex-1 grid" style={{ gridTemplateColumns: `repeat(${weekDays.length}, 1fr)` }}>
           {weekDays.map((day, colIdx) => {
-            const today = isToday(day)
+            const today = isToday(day) // ← client-side: usa timezone del browser ✓
             const isWeekend = colIdx >= 5
             const dayTasks    = getTasksForDay(day)
             const daySessions = getSessionsForDay(day)
             const dayPeriods  = getPeriodsForDay(day)
+            const dayRoutines = getRoutinesForDay(day)
 
             return (
               <div key={day.toISOString()}
@@ -168,8 +213,6 @@ export function WeeklyView({ tasks, sessions, periods, date }: WeeklyViewProps) 
                         borderTop: h === 7 ? 'none' : '1px solid rgba(255,255,255,0.04)',
                       }} />
                   ))}
-
-                  {/* Media hora */}
                   {HOURS.map(h => (
                     <div key={`h-${h}`} className="absolute w-full"
                       style={{
@@ -191,13 +234,41 @@ export function WeeklyView({ tasks, sessions, periods, date }: WeeklyViewProps) 
                     )
                   })()}
 
+                  {/* Rutinas */}
+                  {dayRoutines.map((routine, i) => {
+                    const top    = timeToTop(routine.start_time)
+                    const height = durationToPx(routine.start_time, routine.end_time)
+                    const barColor = ROUTINE_COLORS[routine.color] ?? '#6366f1'
+                    return (
+                      <div key={i}
+                        className="absolute rounded-lg overflow-hidden z-10"
+                        style={{
+                          top: top + 1,
+                          height: height - 2,
+                          left: 2, right: 2,
+                          background: hexToRgba(barColor, 0.12),
+                          border: `1px solid ${hexToRgba(barColor, 0.3)}`,
+                          display: 'flex',
+                        }}>
+                        <div className="w-1 flex-shrink-0 rounded-l-lg" style={{ background: barColor }} />
+                        <div className="flex-1 min-w-0 px-1.5 py-1 overflow-hidden">
+                          {height >= 28 && (
+                            <p className="font-semibold truncate leading-tight" style={{ fontSize: 10, color: '#fff' }}>
+                              {routine.name}
+                            </p>
+                          )}
+                        </div>
+                      </div>
+                    )
+                  })}
+
                   {/* Períodos del horario */}
                   {dayPeriods.map((period, i) => {
                     const top    = timeToTop(period.start_time)
                     const height = durationToPx(period.start_time, period.end_time)
                     const colors = getPeriodColor(period)
                     const label  = periodLabel(period)
-                    const showTime = height >= 28
+                    const showTime    = height >= 28
                     const showSubTime = height >= 44
 
                     return (
@@ -212,7 +283,6 @@ export function WeeklyView({ tasks, sessions, periods, date }: WeeklyViewProps) 
                           border: `1px solid ${colors.border}`,
                           display: 'flex',
                         }}>
-                        {/* Barra de color lateral */}
                         <div className="w-1 flex-shrink-0 rounded-l-lg" style={{ background: colors.bar }} />
                         <div className="flex-1 min-w-0 px-1.5 py-1 overflow-hidden">
                           {showTime && (

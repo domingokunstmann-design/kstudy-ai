@@ -83,6 +83,29 @@ export async function addSchoolPeriod(data: {
   return { success: true }
 }
 
+export async function updateSchoolPeriod(id: string, data: {
+  period_type: string
+  subject: string | null
+  start_time: string
+  end_time: string
+  color: string
+}) {
+  const supabase = await createClient()
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) return { error: 'No autenticado' }
+
+  const { error } = await supabase
+    .from('school_periods')
+    .update(data)
+    .eq('id', id)
+    .eq('user_id', user.id)
+
+  if (error) return { error: error.message }
+  revalidatePath('/dashboard/schedule')
+  revalidatePath('/dashboard/calendar')
+  return { success: true }
+}
+
 export async function deleteSchoolPeriod(id: string) {
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()

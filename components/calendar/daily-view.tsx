@@ -16,6 +16,7 @@ interface SchoolPeriod {
   period_type: string
   start_time: string
   end_time: string
+  color?: string | null
 }
 
 interface Routine {
@@ -114,21 +115,43 @@ export function DailyView({ tasks, sessions, periods, routines, date }: DailyVie
           {periods.map((period, i) => {
             const top = timeToPercent(period.start_time.slice(0,5))
             const height = durationToPercent(period.start_time.slice(0,5), period.end_time.slice(0,5))
-            const colors = PERIOD_COLORS[period.period_type] ?? PERIOD_COLORS.class
+
+            // Usar color guardado si existe, sino colores por tipo
+            let bg: string, border: string, text: string
+            if (period.color && period.period_type !== 'break' && period.period_type !== 'lunch' && period.period_type !== 'free') {
+              const h = period.color.replace('#', '')
+              const r = parseInt(h.slice(0,2), 16)
+              const g = parseInt(h.slice(2,4), 16)
+              const b = parseInt(h.slice(4,6), 16)
+              bg     = `rgba(${r},${g},${b},0.15)`
+              border = `rgba(${r},${g},${b},0.4)`
+              text   = period.color
+            } else {
+              const colors = PERIOD_COLORS[period.period_type] ?? PERIOD_COLORS.class
+              bg = colors.bg; border = colors.border; text = colors.text
+            }
+
+            const label = period.period_type === 'break' ? '☕ Recreo'
+              : period.period_type === 'lunch' ? '🍽️ Almuerzo'
+              : (period.subject ?? period.period_type)
+
             return (
-              <div key={i} className="absolute left-1 right-1 rounded-lg px-2 py-1 overflow-hidden z-10"
+              <div key={i} className="absolute left-1 right-1 rounded-lg overflow-hidden z-10 flex"
                 style={{
                   top: `${top}%`,
                   height: `${height}%`,
-                  background: colors.bg,
-                  border: `1px solid ${colors.border}`,
+                  background: bg,
+                  border: `1px solid ${border}`,
                 }}>
-                <p className="text-[10px] font-semibold truncate" style={{ color: colors.text }}>
-                  {period.period_type === 'break' ? '☕ Recreo' : period.period_type === 'lunch' ? '🍽️ Almuerzo' : (period.subject ?? period.period_type)}
-                </p>
-                <p className="text-[9px] opacity-60" style={{ color: colors.text }}>
-                  {period.start_time.slice(0,5)} – {period.end_time.slice(0,5)}
-                </p>
+                {period.color && <div className="w-1 flex-shrink-0" style={{ background: period.color }} />}
+                <div className="flex-1 px-2 py-1 min-w-0 overflow-hidden">
+                  <p className="text-[10px] font-semibold truncate" style={{ color: text }}>
+                    {label}
+                  </p>
+                  <p className="text-[9px] opacity-60 truncate" style={{ color: text }}>
+                    {period.start_time.slice(0,5)} – {period.end_time.slice(0,5)}
+                  </p>
+                </div>
               </div>
             )
           })}

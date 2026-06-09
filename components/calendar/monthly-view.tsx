@@ -1,3 +1,5 @@
+'use client'
+
 import { cn, formatDueDate } from '@/lib/utils'
 import { TASK_TYPE_CONFIG } from '@/types'
 import type { Task } from '@/types'

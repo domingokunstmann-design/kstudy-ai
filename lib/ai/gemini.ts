@@ -31,9 +31,16 @@ export async function callGemini({
   }
 
   try {
-    const res = await fetch(`${GEMINI_API_URL}?key=${apiKey}`, {
+    // Las keys nuevas de AI Studio (formato AQ.) son OAuth tokens → van en Authorization header
+    // Las keys antiguas (formato AIza...) van como query param ?key=
+    const isOAuthToken = apiKey.startsWith('AQ.')
+    const url = isOAuthToken ? GEMINI_API_URL : `${GEMINI_API_URL}?key=${apiKey}`
+    const headers: Record<string, string> = { 'Content-Type': 'application/json' }
+    if (isOAuthToken) headers['Authorization'] = `Bearer ${apiKey}`
+
+    const res = await fetch(url, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers,
       body: JSON.stringify({
         contents: [{ parts: [{ text: prompt }] }],
         generationConfig: {

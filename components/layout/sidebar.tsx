@@ -5,8 +5,9 @@ import { usePathname } from 'next/navigation'
 import { cn } from '@/lib/utils'
 import {
   LayoutDashboard, CheckSquare, Calendar,
-  BookOpen, Mail, Settings, Sparkles, Brain, GraduationCap, Zap, BarChart2, Star,
+  BookOpen, Mail, Settings, Sparkles, Brain, GraduationCap, Zap, BarChart2, Star, Timer,
 } from 'lucide-react'
+import { PomodoroTimer } from '@/components/pomodoro/pomodoro-timer'
 
 const NAV_ITEMS = [
   { title: 'Dashboard',    href: '/dashboard',             icon: LayoutDashboard },
@@ -172,6 +173,11 @@ export function Sidebar({
           )
         })}
       </nav>
+
+      {/* ── Pomodoro ── */}
+      <div className="px-3 pb-3">
+        <PomodoroTimer />
+      </div>
 
       {/* ── Status ── */}
       <div className="px-4 pb-3">

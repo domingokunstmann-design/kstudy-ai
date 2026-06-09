@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import { SubjectCard } from '@/components/grades/subject-card'
 import { SubjectForm } from '@/components/grades/subject-form'
+import { ImportFromScheduleButton } from '@/components/grades/import-from-schedule-button'
 import { calculateAverage, SUBJECT_COLORS } from '@/lib/grades/calculator'
 import { Plus, BookOpen, TrendingUp } from 'lucide-react'
 
@@ -87,14 +88,17 @@ export function GradesClient({ initialData }: GradesClientProps) {
             Mis notas
           </h1>
         </div>
-        <button
-          onClick={() => setShowSubjectForm(true)}
-          className="flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-semibold text-white transition-all hover:opacity-90"
-          style={{ background: 'linear-gradient(135deg, #7c6af7, #9d8fff)' }}
-        >
-          <Plus className="w-4 h-4" />
-          Nueva asignatura
-        </button>
+        <div className="flex items-center gap-2">
+          <ImportFromScheduleButton />
+          <button
+            onClick={() => setShowSubjectForm(true)}
+            className="flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-semibold text-white transition-all hover:opacity-90"
+            style={{ background: 'linear-gradient(135deg, #7c6af7, #9d8fff)' }}
+          >
+            <Plus className="w-4 h-4" />
+            Nueva
+          </button>
+        </div>
       </div>
 
       {/* Resumen superior */}
@@ -168,13 +172,16 @@ export function GradesClient({ initialData }: GradesClientProps) {
           <p className="text-sm text-zinc-600 mb-5 max-w-xs">
             Agrega tus asignaturas para empezar a registrar notas y calcular tu promedio.
           </p>
-          <button
-            onClick={() => setShowSubjectForm(true)}
-            className="flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-semibold text-white"
-            style={{ background: 'linear-gradient(135deg, #7c6af7, #9d8fff)' }}
-          >
-            <Plus className="w-4 h-4" /> Agregar primera asignatura
-          </button>
+          <div className="flex flex-col items-center gap-3">
+            <ImportFromScheduleButton />
+            <button
+              onClick={() => setShowSubjectForm(true)}
+              className="flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-semibold text-white"
+              style={{ background: 'linear-gradient(135deg, #7c6af7, #9d8fff)' }}
+            >
+              <Plus className="w-4 h-4" /> Agregar manualmente
+            </button>
+          </div>
         </div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">

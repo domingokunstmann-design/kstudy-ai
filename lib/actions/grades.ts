@@ -191,6 +191,97 @@ export async function deleteGrade(gradeId: string) {
   return { success: true }
 }
 
+// ── Importar asignaturas desde el horario escolar ────────────
+
+/**
+ * Lee los bloques de tipo 'class' del horario del usuario,
+ * extrae las asignaturas únicas y las crea en la tabla subjects
+ * (omitiendo las que ya existen con el mismo nombre).
+ */
+export async function importSubjectsFromSchedule() {
+  const supabase = await createClient()
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) return { error: 'No autenticado', imported: 0 }
+
+  const currentYear = new Date().getFullYear()
+  const currentMonth = new Date().getMonth() + 1
+  const currentSemester = currentMonth <= 6 ? 1 : 2
+
+  // 1. Leer bloques de clase del horario
+  const { data: periods, error: periodsError } = await supabase
+    .from('school_periods')
+    .select('subject, color')
+    .eq('user_id', user.id)
+    .eq('period_type', 'class')
+    .not('subject', 'is', null)
+
+  if (periodsError) return { error: periodsError.message, imported: 0 }
+  if (!periods?.length) return { error: 'No hay clases en tu horario. Configura el horario en "Mi Horario" primero.', imported: 0 }
+
+  // 2. Deduplicar por nombre (case-insensitive), quedarse con el color del primero
+  const seen = new Map<string, string>()
+  for (const p of periods) {
+    if (!p.subject) continue
+    const key = p.subject.trim().toLowerCase()
+    if (!seen.has(key)) seen.set(key, p.color ?? 'indigo')
+  }
+
+  // 3. Leer asignaturas ya existentes para este semestre
+  const { data: existing } = await supabase
+    .from('subjects')
+    .select('name')
+    .eq('user_id', user.id)
+    .eq('school_year', currentYear)
+    .eq('semester', currentSemester)
+
+  const existingNames = new Set((existing ?? []).map(s => s.name.toLowerCase()))
+
+  // 4. Filtrar las que NO existen aún
+  const toInsert = Array.from(seen.entries())
+    .filter(([key]) => !existingNames.has(key))
+    .map(([, color], i) => {
+      // Recuperar el nombre original (con mayúsculas correctas)
+      const original = periods.find(p =>
+        p.subject?.trim().toLowerCase() === Array.from(seen.keys())[i]
+      )?.subject ?? ''
+      return {
+        user_id: user.id,
+        name: original.trim(),
+        color: mapScheduleColorToSubjectColor(color),
+        semester: currentSemester,
+        school_year: currentYear,
+        coefficient: 1.0,
+      }
+    })
+
+  if (!toInsert.length) return { error: null, imported: 0, alreadyExisted: seen.size }
+
+  const { error: insertError } = await supabase.from('subjects').insert(toInsert)
+  if (insertError) return { error: insertError.message, imported: 0 }
+
+  revalidateGrades()
+  return { error: null, imported: toInsert.length }
+}
+
+// Mapea los IDs de color del horario a los de subjects
+function mapScheduleColorToSubjectColor(scheduleColor: string): string {
+  const map: Record<string, string> = {
+    indigo: 'indigo',
+    purple: 'violet',
+    violet: 'violet',
+    pink: 'pink',
+    sky: 'cyan',
+    teal: 'cyan',
+    green: 'emerald',
+    yellow: 'amber',
+    orange: 'orange',
+    rose: 'rose',
+    red: 'rose',
+    slate: 'indigo',
+  }
+  return map[scheduleColor] ?? 'indigo'
+}
+
 // ── Datos completos para la página de notas ──────────────────
 
 export async function getGradesPageData() {

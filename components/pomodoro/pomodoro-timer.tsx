@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect, useRef, useCallback } from 'react'
+import { createPortal } from 'react-dom'
 import { Play, Pause, RotateCcw, Coffee, Brain, X, ChevronUp, ChevronDown, Maximize2, Minimize2 } from 'lucide-react'
 
 type Mode = 'work' | 'break'
@@ -79,10 +80,10 @@ export function PomodoroTimer() {
     const fsCircumference = 2 * Math.PI * fsRadius
     const fsOffset = fsCircumference * (1 - progress)
 
-    return (
+    const overlay = (
       <div
-        className="fixed inset-0 z-50 flex flex-col items-center justify-center select-none"
-        style={{ background: mode === 'work' ? '#0a0814' : '#080f08' }}
+        className="fixed inset-0 z-[9999] flex flex-col items-center justify-center select-none"
+        style={{ background: mode === 'work' ? '#07050f' : '#050a05' }}
       >
         {/* Botón salir */}
         <button
@@ -158,6 +159,7 @@ export function PomodoroTimer() {
         <p className="mt-12 text-xs opacity-20 text-white">Presiona Esc para salir</p>
       </div>
     )
+    return createPortal(overlay, document.body)
   }
 
   // ── Modo colapsado (chip) ───────────────────────────────────

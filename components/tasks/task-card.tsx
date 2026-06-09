@@ -9,6 +9,7 @@ import {
   CheckCircle2, Circle, Trash2, ChevronDown, AlertCircle,
   Mail, Clock, RotateCcw,
 } from 'lucide-react'
+import { GradeAfterTaskModal } from '@/components/grades/grade-after-task-modal'
 
 interface TaskCardProps {
   task: Task
@@ -19,6 +20,7 @@ export function TaskCard({ task, email }: TaskCardProps) {
   const [loading, setLoading] = useState<'complete' | 'delete' | null>(null)
   const [showEmail, setShowEmail] = useState(false)
   const [deleted, setDeleted] = useState(false)
+  const [showGradeModal, setShowGradeModal] = useState(false)
 
   if (deleted) return null
 
@@ -32,10 +34,15 @@ export function TaskCard({ task, email }: TaskCardProps) {
     setLoading('complete')
     if (isCompleted) {
       await reopenTask(task.id)
+      setLoading(null)
     } else {
       await completeTask(task.id)
+      setLoading(null)
+      // Si es una evaluación, preguntar si ya tiene la nota
+      if (task.type === 'evaluacion') {
+        setShowGradeModal(true)
+      }
     }
-    setLoading(null)
   }
 
   async function handleDelete() {
@@ -177,6 +184,15 @@ export function TaskCard({ task, email }: TaskCardProps) {
           </div>
         </div>
       </div>
+
+      {/* Modal de nota al completar una evaluación */}
+      {showGradeModal && (
+        <GradeAfterTaskModal
+          task={{ id: task.id, title: task.title, course_name: task.course_name }}
+          onClose={() => setShowGradeModal(false)}
+          onSkip={() => setShowGradeModal(false)}
+        />
+      )}
 
       {/* Email viewer expandible */}
       {showEmail && email && (

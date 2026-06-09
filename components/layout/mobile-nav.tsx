@@ -3,17 +3,18 @@
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { cn } from '@/lib/utils'
-import { LayoutDashboard, CheckSquare, Calendar, Brain, MoreHorizontal } from 'lucide-react'
+import { LayoutDashboard, CheckSquare, Calendar, Brain, MoreHorizontal, Star } from 'lucide-react'
 import { useState } from 'react'
 
 const MAIN_ITEMS = [
   { title: 'Inicio',       href: '/dashboard',           icon: LayoutDashboard },
   { title: 'Tareas',       href: '/dashboard/tasks',     icon: CheckSquare },
-  { title: 'Calendario',   href: '/dashboard/calendar',  icon: Calendar },
+  { title: 'Notas',        href: '/dashboard/grades',    icon: Star },
   { title: 'Planificador', href: '/dashboard/planner',   icon: Brain },
 ]
 
 const MORE_ITEMS = [
+  { title: 'Calendario',    href: '/dashboard/calendar' },
   { title: 'Mi Horario',    href: '/dashboard/schedule' },
   { title: 'Classroom',     href: '/dashboard/classroom' },
   { title: 'Correos',       href: '/dashboard/emails' },

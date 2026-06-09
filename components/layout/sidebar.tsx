@@ -5,12 +5,13 @@ import { usePathname } from 'next/navigation'
 import { cn } from '@/lib/utils'
 import {
   LayoutDashboard, CheckSquare, Calendar,
-  BookOpen, Mail, Settings, Sparkles, Brain, GraduationCap, Zap, BarChart2,
+  BookOpen, Mail, Settings, Sparkles, Brain, GraduationCap, Zap, BarChart2, Star,
 } from 'lucide-react'
 
 const NAV_ITEMS = [
   { title: 'Dashboard',    href: '/dashboard',             icon: LayoutDashboard },
   { title: 'Tareas',       href: '/dashboard/tasks',       icon: CheckSquare },
+  { title: 'Notas',        href: '/dashboard/grades',      icon: Star },
   { title: 'Planificador', href: '/dashboard/planner',     icon: Brain },
   { title: 'Mi Horario',   href: '/dashboard/schedule',    icon: GraduationCap },
   { title: 'Calendario',   href: '/dashboard/calendar',    icon: Calendar },

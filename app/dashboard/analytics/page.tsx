@@ -1,11 +1,13 @@
 import { Metadata } from 'next'
 import { createClient } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'
-import { BarChart2, Flame, Clock, BookOpen } from 'lucide-react'
+import { BarChart2, Flame, Clock, BookOpen, Trophy, TrendingUp } from 'lucide-react'
 import { CompletionChart } from '@/components/analytics/completion-chart'
 import { SubjectChart } from '@/components/analytics/subject-chart'
 import { StudyTimeChart } from '@/components/analytics/study-time-chart'
 import { StreakCard } from '@/components/analytics/streak-card'
+import { LogrosCard } from '@/components/analytics/logros-card'
+import { HabitsInsights } from '@/components/analytics/habits-insights'
 import { format, subDays, startOfWeek, eachWeekOfInterval, startOfDay, isSameDay } from 'date-fns'
 import { es } from 'date-fns/locale'
 
@@ -161,6 +163,21 @@ export default async function AnalyticsPage() {
   const totalStudyHours = Math.round((totalStudyMinutes / 60) * 10) / 10
   const totalCourses = courseMap.size
 
+  // ── Datos para Logros ─────────────────────────────────────────────────────
+  const urgentCompleted = tasks.filter(t =>
+    t.status === 'completada' && (t as any).priority === 'urgente'
+  ).length
+
+  const logroStats = {
+    totalCompleted,
+    currentStreak,
+    longestStreak,
+    totalStudyHours,
+    totalSessions: sessions.length,
+    hasStudyPlan: sessions.length > 0,
+    urgentCompleted,
+  }
+
   return (
     <div className="p-7 max-w-5xl mx-auto space-y-7 animate-fade-in">
 
@@ -311,6 +328,40 @@ export default async function AnalyticsPage() {
               <p className="text-xs mt-1">Completa sesiones del planificador para ver tu tiempo de estudio</p>
             </div>
           )}
+        </div>
+      </div>
+
+      {/* Fila 3 — Logros + Hábitos */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
+
+        {/* Logros */}
+        <div className="section-card">
+          <div className="section-header">
+            <div className="flex items-center gap-2">
+              <Trophy className="w-4 h-4 text-yellow-400" />
+              <span className="text-sm font-semibold" style={{ color: 'var(--text-primary)' }}>
+                Logros
+              </span>
+            </div>
+          </div>
+          <div className="p-5 pt-4">
+            <LogrosCard stats={logroStats} />
+          </div>
+        </div>
+
+        {/* Insights de hábitos */}
+        <div className="section-card">
+          <div className="section-header">
+            <div className="flex items-center gap-2">
+              <TrendingUp className="w-4 h-4 text-indigo-400" />
+              <span className="text-sm font-semibold" style={{ color: 'var(--text-primary)' }}>
+                Tus hábitos de estudio
+              </span>
+            </div>
+          </div>
+          <div className="p-5 pt-4">
+            <HabitsInsights sessions={sessions} tasks={tasks} />
+          </div>
         </div>
       </div>
     </div>

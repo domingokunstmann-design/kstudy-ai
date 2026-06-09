@@ -7,6 +7,8 @@ import { formatDueDate, getDaysUntilDue, cn } from '@/lib/utils'
 import { TASK_TYPE_CONFIG, PRIORITY_CONFIG } from '@/types'
 import type { Task } from '@/types'
 import { OnboardingBanner } from '@/components/onboarding/onboarding-banner'
+import { StudyNowWidget } from '@/components/dashboard/study-now-widget'
+import { WeeklyProgress } from '@/components/dashboard/weekly-progress'
 
 export const metadata: Metadata = { title: 'Dashboard' }
 export const revalidate = 300
@@ -157,6 +159,13 @@ export default async function DashboardPage() {
 
         {/* Panel derecho */}
         <div className="space-y-4">
+
+          {/* Progreso semanal */}
+          <WeeklyProgress />
+
+          {/* Widget "¿Qué estudiar ahora?" */}
+          <StudyNowWidget />
+
           {/* Quick actions */}
           <div className="section-card">
             <div className="section-header">

@@ -92,6 +92,18 @@ export function TaskCard({ task, email }: TaskCardProps) {
               {typeConfig.label}
             </span>
 
+            {/* Badge de prioridad para urgente/alta */}
+            {(task.priority === 'urgente' || task.priority === 'alta') && (
+              <span className={cn(
+                'text-[10px] px-1.5 py-0.5 rounded border font-semibold',
+                task.priority === 'urgente'
+                  ? 'bg-red-500/10 text-red-400 border-red-500/25'
+                  : 'bg-orange-500/10 text-orange-400 border-orange-500/25'
+              )}>
+                {task.priority === 'urgente' ? '🔴 Urgente' : '🟠 Alta'}
+              </span>
+            )}
+
             {task.course_name && (
               <span className="text-xs text-zinc-600">{task.course_name}</span>
             )}

@@ -19,6 +19,7 @@ interface SchoolPeriod {
   start_time: string
   end_time: string
   day_of_week: number
+  color?: string | null
 }
 
 interface WeeklyViewProps {
@@ -30,170 +31,252 @@ interface WeeklyViewProps {
 
 const HOURS = Array.from({ length: 15 }, (_, i) => i + 7) // 7:00 – 21:00
 const TOTAL_HOURS = 15
-const CELL_HEIGHT = 48 // px por hora
+const CELL_HEIGHT = 64 // px por hora — más espacio = bloques más legibles
 
-function timeToPercent(time: string): number {
-  const [h, m] = time.slice(0, 5).split(':').map(Number)
-  return ((h - 7) * 60 + m) / (TOTAL_HOURS * 60) * 100
+// Paleta de colores para asignaturas (determinista por nombre)
+const SUBJECT_PALETTE = [
+  { bg: 'rgba(99,102,241,0.2)',  border: 'rgba(99,102,241,0.5)',  text: '#c7d2fe', bar: '#6366f1' },
+  { bg: 'rgba(168,85,247,0.2)', border: 'rgba(168,85,247,0.5)', text: '#e9d5ff', bar: '#a855f7' },
+  { bg: 'rgba(236,72,153,0.2)', border: 'rgba(236,72,153,0.5)', text: '#fbcfe8', bar: '#ec4899' },
+  { bg: 'rgba(14,165,233,0.2)', border: 'rgba(14,165,233,0.5)', text: '#bae6fd', bar: '#0ea5e9' },
+  { bg: 'rgba(20,184,166,0.2)', border: 'rgba(20,184,166,0.5)', text: '#99f6e4', bar: '#14b8a6' },
+  { bg: 'rgba(34,197,94,0.2)',  border: 'rgba(34,197,94,0.5)',  text: '#bbf7d0', bar: '#22c55e'  },
+  { bg: 'rgba(234,179,8,0.2)',  border: 'rgba(234,179,8,0.5)',  text: '#fef08a', bar: '#eab308'  },
+  { bg: 'rgba(249,115,22,0.2)', border: 'rgba(249,115,22,0.5)', text: '#fed7aa', bar: '#f97316' },
+  { bg: 'rgba(244,63,94,0.2)',  border: 'rgba(244,63,94,0.5)',  text: '#fecdd3', bar: '#f43f5e'  },
+  { bg: 'rgba(45,212,191,0.2)', border: 'rgba(45,212,191,0.5)', text: '#99f6e4', bar: '#2dd4bf' },
+]
+
+const SPECIAL: Record<string, { bg: string; border: string; text: string; bar: string }> = {
+  break: { bg: 'rgba(245,158,11,0.12)', border: 'rgba(245,158,11,0.3)', text: '#fcd34d', bar: '#f59e0b' },
+  lunch: { bg: 'rgba(16,185,129,0.12)', border: 'rgba(16,185,129,0.3)', text: '#6ee7b7', bar: '#10b981' },
+  free:  { bg: 'rgba(100,116,139,0.08)', border: 'rgba(100,116,139,0.2)', text: '#94a3b8', bar: '#64748b' },
 }
 
-function durationToPercent(start: string, end: string): number {
+function hashSubject(subject: string): number {
+  let h = 0
+  for (const c of subject) h = (Math.imul(31, h) + c.charCodeAt(0)) | 0
+  return Math.abs(h)
+}
+
+function getPeriodColor(period: SchoolPeriod) {
+  if (period.period_type === 'break') return SPECIAL.break
+  if (period.period_type === 'lunch') return SPECIAL.lunch
+  if (period.period_type === 'free')  return SPECIAL.free
+  const key = period.subject ?? period.period_type
+  return SUBJECT_PALETTE[hashSubject(key) % SUBJECT_PALETTE.length]
+}
+
+function timeToTop(time: string): number {
+  const [h, m] = time.slice(0, 5).split(':').map(Number)
+  return ((h - 7) * 60 + m) / (TOTAL_HOURS * 60) * (CELL_HEIGHT * TOTAL_HOURS)
+}
+
+function durationToPx(start: string, end: string): number {
   const [sh, sm] = start.slice(0, 5).split(':').map(Number)
   const [eh, em] = end.slice(0, 5).split(':').map(Number)
   const mins = (eh * 60 + em) - (sh * 60 + sm)
-  return Math.max(mins / (TOTAL_HOURS * 60) * 100, 1)
+  return Math.max(mins / 60 * CELL_HEIGHT, 20)
 }
 
-const PERIOD_COLORS: Record<string, { bg: string; border: string; text: string }> = {
-  class:  { bg: 'rgba(99,102,241,0.12)', border: 'rgba(99,102,241,0.3)', text: '#a5b4fc' },
-  break:  { bg: 'rgba(245,158,11,0.12)', border: 'rgba(245,158,11,0.3)', text: '#fcd34d' },
-  lunch:  { bg: 'rgba(16,185,129,0.12)', border: 'rgba(16,185,129,0.3)', text: '#6ee7b7' },
-  pe:     { bg: 'rgba(244,63,94,0.12)',  border: 'rgba(244,63,94,0.3)',  text: '#fda4af' },
-  free:   { bg: 'rgba(100,116,139,0.08)', border: 'rgba(100,116,139,0.2)', text: '#94a3b8' },
+function periodLabel(p: SchoolPeriod): string {
+  if (p.period_type === 'break') return '☕ Recreo'
+  if (p.period_type === 'lunch') return '🍽 Almuerzo'
+  return p.subject ?? p.period_type
 }
 
 export function WeeklyView({ tasks, sessions, periods, date }: WeeklyViewProps) {
   const weekStart = startOfWeek(date, { weekStartsOn: 1 })
-  const weekDays = Array.from({ length: 7 }, (_, i) => addDays(weekStart, i))
+  // Mostrar Lun-Sáb (6 columnas), ocultar Dom si está vacío
+  const weekDays = Array.from({ length: 6 }, (_, i) => addDays(weekStart, i))
 
   const getTasksForDay = (day: Date) =>
     tasks.filter(t => t.due_date && isSameDay(new Date(t.due_date), day))
 
-  const getSessionsForDay = (day: Date) => {
-    const dow = ((day.getDay() + 6) % 7) + 1 // lun=1 … dom=7
-    return sessions.filter(s => {
-      const sessionDate = new Date(s.start_time)
-      return isSameDay(sessionDate, day)
-    })
-  }
+  const getSessionsForDay = (day: Date) =>
+    sessions.filter(s => isSameDay(new Date(s.start_time), day))
 
   const getPeriodsForDay = (day: Date) => {
-    const dow = (day.getDay() + 6) % 7 + 1 // lun=1
+    const dow = (day.getDay() + 6) % 7 + 1
     return periods.filter(p => p.day_of_week === dow)
   }
 
+  const totalHeight = CELL_HEIGHT * TOTAL_HOURS
+
   return (
-    <div className="section-card overflow-hidden">
-      <div className="flex">
+    <div className="section-card overflow-hidden select-none">
+      <div className="flex" style={{ fontSize: 0 }}>
+
         {/* Columna de horas */}
-        <div className="flex-shrink-0 w-12">
-          {/* Header vacío alineado con días */}
-          <div style={{ height: 40 }} />
+        <div className="flex-shrink-0 w-12 border-r" style={{ borderColor: 'rgba(255,255,255,0.06)' }}>
+          <div style={{ height: 44 }} /> {/* Header spacer */}
           {HOURS.map(h => (
             <div key={h} className="flex items-start justify-end pr-2"
               style={{ height: CELL_HEIGHT }}>
-              <span className="text-[9px] font-medium text-white/20 -mt-2">{h}:00</span>
+              <span style={{ fontSize: 10, fontWeight: 500, color: 'rgba(255,255,255,0.2)', marginTop: -6 }}>
+                {h}:00
+              </span>
             </div>
           ))}
         </div>
 
-        {/* 7 columnas de días */}
-        <div className="flex-1 grid grid-cols-7 border-l" style={{ borderColor: 'rgba(255,255,255,0.06)' }}>
+        {/* Columnas de días */}
+        <div className="flex-1 grid" style={{ gridTemplateColumns: `repeat(${weekDays.length}, 1fr)` }}>
           {weekDays.map((day, colIdx) => {
             const today = isToday(day)
-            const dayTasks = getTasksForDay(day)
-            const daySessions = getSessionsForDay(day)
-            const dayPeriods = getPeriodsForDay(day)
             const isWeekend = colIdx >= 5
+            const dayTasks    = getTasksForDay(day)
+            const daySessions = getSessionsForDay(day)
+            const dayPeriods  = getPeriodsForDay(day)
 
             return (
               <div key={day.toISOString()}
                 className="flex flex-col border-r"
                 style={{ borderColor: 'rgba(255,255,255,0.04)' }}>
-                {/* Header del día */}
+
+                {/* Header día */}
                 <div className={cn(
-                  'flex flex-col items-center justify-center py-2 border-b',
-                  isWeekend ? 'opacity-50' : ''
+                  'flex flex-col items-center justify-center border-b',
+                  isWeekend ? 'opacity-40' : ''
                 )}
-                  style={{ height: 40, borderColor: 'rgba(255,255,255,0.06)' }}>
-                  <span className="text-[9px] font-medium text-white/30 uppercase tracking-wide">
+                  style={{ height: 44, borderColor: 'rgba(255,255,255,0.06)' }}>
+                  <span style={{ fontSize: 10, fontWeight: 600, color: 'rgba(255,255,255,0.35)', textTransform: 'uppercase', letterSpacing: '0.07em' }}>
                     {format(day, 'EEE', { locale: es })}
                   </span>
-                  <span className={cn(
-                    'text-sm font-bold mt-0.5',
-                    today ? 'text-indigo-400' : 'text-white/60'
+                  <div className={cn(
+                    'w-7 h-7 flex items-center justify-center rounded-full mt-0.5 transition-colors',
+                    today ? 'bg-indigo-500' : ''
                   )}>
-                    {format(day, 'd')}
-                  </span>
-                  {today && <div className="w-1 h-1 rounded-full bg-indigo-400 mt-0.5" />}
+                    <span style={{ fontSize: 13, fontWeight: 700, color: today ? '#fff' : 'rgba(255,255,255,0.55)' }}>
+                      {format(day, 'd')}
+                    </span>
+                  </div>
                 </div>
 
                 {/* Timeline */}
                 <div className="relative"
-                  style={{ height: CELL_HEIGHT * TOTAL_HOURS, background: isWeekend ? 'rgba(0,0,0,0.1)' : 'transparent' }}>
+                  style={{
+                    height: totalHeight,
+                    background: isWeekend ? 'rgba(0,0,0,0.08)' : 'transparent',
+                  }}>
+
                   {/* Gridlines */}
                   {HOURS.map(h => (
-                    <div key={h} className="absolute w-full border-t"
-                      style={{ top: (h - 7) * CELL_HEIGHT, borderColor: 'rgba(255,255,255,0.04)' }} />
+                    <div key={h} className="absolute w-full"
+                      style={{
+                        top: (h - 7) * CELL_HEIGHT,
+                        borderTop: h === 7 ? 'none' : '1px solid rgba(255,255,255,0.04)',
+                      }} />
                   ))}
 
-                  {/* Current time */}
+                  {/* Media hora */}
+                  {HOURS.map(h => (
+                    <div key={`h-${h}`} className="absolute w-full"
+                      style={{
+                        top: (h - 7) * CELL_HEIGHT + CELL_HEIGHT / 2,
+                        borderTop: '1px dashed rgba(255,255,255,0.02)',
+                      }} />
+                  ))}
+
+                  {/* Línea de tiempo actual */}
                   {today && (() => {
                     const now = new Date()
-                    const pct = timeToPercent(`${now.getHours()}:${now.getMinutes()}`)
-                    if (pct < 0 || pct > 100) return null
+                    const top = timeToTop(`${now.getHours()}:${now.getMinutes()}`)
+                    if (top < 0 || top > totalHeight) return null
                     return (
-                      <div className="absolute w-full z-20" style={{ top: `${pct}%` }}>
-                        <div className="w-full h-px bg-red-400/60" />
+                      <div className="absolute w-full z-30 flex items-center" style={{ top }}>
+                        <div className="w-2.5 h-2.5 rounded-full bg-red-400 flex-shrink-0 -ml-1.5 shadow-[0_0_6px_rgba(248,113,113,0.8)]" />
+                        <div className="flex-1 h-px bg-red-400/70" />
                       </div>
                     )
                   })()}
 
-                  {/* School periods */}
+                  {/* Períodos del horario */}
                   {dayPeriods.map((period, i) => {
-                    const top = timeToPercent(period.start_time)
-                    const height = durationToPercent(period.start_time, period.end_time)
-                    const colors = PERIOD_COLORS[period.period_type] ?? PERIOD_COLORS.class
+                    const top    = timeToTop(period.start_time)
+                    const height = durationToPx(period.start_time, period.end_time)
+                    const colors = getPeriodColor(period)
+                    const label  = periodLabel(period)
+                    const showTime = height >= 28
+                    const showSubTime = height >= 44
+
                     return (
-                      <div key={i} className="absolute inset-x-0.5 rounded px-1 py-0.5 overflow-hidden z-10"
+                      <div key={i}
+                        className="absolute rounded-lg overflow-hidden z-10 transition-all"
                         style={{
-                          top: `${top}%`,
-                          height: `${height}%`,
+                          top: top + 1,
+                          height: height - 2,
+                          left: 2,
+                          right: 2,
                           background: colors.bg,
                           border: `1px solid ${colors.border}`,
+                          display: 'flex',
                         }}>
-                        <p className="text-[8px] font-semibold truncate leading-tight" style={{ color: colors.text }}>
-                          {period.subject ?? (period.period_type === 'break' ? 'Recreo' : period.period_type === 'lunch' ? 'Almuerzo' : period.period_type)}
-                        </p>
+                        {/* Barra de color lateral */}
+                        <div className="w-1 flex-shrink-0 rounded-l-lg" style={{ background: colors.bar }} />
+                        <div className="flex-1 min-w-0 px-1.5 py-1 overflow-hidden">
+                          {showTime && (
+                            <p className="font-semibold truncate leading-tight" style={{ fontSize: 10, color: colors.text }}>
+                              {label}
+                            </p>
+                          )}
+                          {showSubTime && (
+                            <p className="truncate leading-tight mt-0.5" style={{ fontSize: 9, color: colors.bar, opacity: 0.8 }}>
+                              {period.start_time.slice(0,5)}–{period.end_time.slice(0,5)}
+                            </p>
+                          )}
+                          {!showTime && (
+                            <div className="w-full h-full" title={label} />
+                          )}
+                        </div>
                       </div>
                     )
                   })}
 
                   {/* Study sessions */}
                   {daySessions.map(session => {
-                    const top = timeToPercent(session.start_time)
-                    const height = durationToPercent(session.start_time, session.end_time)
+                    const top    = timeToTop(session.start_time)
+                    const height = durationToPx(session.start_time, session.end_time)
                     return (
-                      <div key={session.id} className="absolute inset-x-0.5 rounded px-1 py-0.5 overflow-hidden z-15"
+                      <div key={session.id}
+                        className="absolute rounded-lg overflow-hidden z-20"
                         style={{
-                          top: `${top}%`,
-                          height: `${height}%`,
-                          background: session.completed ? 'rgba(100,116,139,0.1)' : 'rgba(99,102,241,0.18)',
-                          border: `1px solid ${session.completed ? 'rgba(100,116,139,0.2)' : 'rgba(99,102,241,0.35)'}`,
+                          top: top + 1,
+                          height: height - 2,
+                          left: '30%', right: 2,
+                          background: session.completed ? 'rgba(100,116,139,0.1)' : 'rgba(99,102,241,0.2)',
+                          border: `1px solid ${session.completed ? 'rgba(100,116,139,0.25)' : 'rgba(99,102,241,0.45)'}`,
+                          display: 'flex',
                         }}>
-                        <p className="text-[8px] font-semibold text-indigo-300 truncate leading-tight">
-                          {session.completed ? '✓ ' : '📖 '}{session.label}
-                        </p>
+                        <div className="w-1 flex-shrink-0 rounded-l-lg"
+                          style={{ background: session.completed ? '#64748b' : '#6366f1' }} />
+                        <div className="flex-1 px-1.5 py-1 overflow-hidden">
+                          <p className="font-semibold truncate" style={{ fontSize: 10, color: session.completed ? '#94a3b8' : '#a5b4fc' }}>
+                            {session.completed ? '✓ ' : '📖 '}{session.label}
+                          </p>
+                        </div>
                       </div>
                     )
                   })}
 
-                  {/* Tasks due */}
-                  {dayTasks.map((task, i) => {
-                    const config = TASK_TYPE_CONFIG[task.type]
-                    return (
-                      <div key={task.id} className="absolute inset-x-0.5 rounded px-1 py-0.5 overflow-hidden z-20"
-                        style={{
-                          top: `${8 + i * 4}%`,
-                          background: 'rgba(244,63,94,0.12)',
-                          border: '1px solid rgba(244,63,94,0.3)',
-                        }}>
-                        <p className="text-[8px] font-semibold text-rose-300 truncate leading-tight">
-                          ⚑ {task.title}
-                        </p>
-                      </div>
-                    )
-                  })}
+                  {/* Tareas que vencen ese día */}
+                  {dayTasks.map((task, i) => (
+                    <div key={task.id}
+                      className="absolute rounded-md overflow-hidden z-25"
+                      style={{
+                        top: 4 + i * 22,
+                        right: 2, left: 2,
+                        height: 18,
+                        background: 'rgba(244,63,94,0.18)',
+                        border: '1px solid rgba(244,63,94,0.4)',
+                        display: 'flex', alignItems: 'center', paddingLeft: 6, gap: 3,
+                      }}>
+                      <div className="w-1 h-1 rounded-full flex-shrink-0" style={{ background: '#f43f5e' }} />
+                      <p className="truncate" style={{ fontSize: 9, fontWeight: 700, color: '#fda4af' }}>
+                        {task.title}
+                      </p>
+                    </div>
+                  ))}
                 </div>
               </div>
             )

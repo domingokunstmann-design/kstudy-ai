@@ -124,7 +124,7 @@ export function DailyView({ tasks, sessions, periods, routines, date }: DailyVie
                   border: `1px solid ${colors.border}`,
                 }}>
                 <p className="text-[10px] font-semibold truncate" style={{ color: colors.text }}>
-                  {period.subject ?? period.period_type === 'break' ? '☕ Recreo' : period.period_type === 'lunch' ? '🍽️ Almuerzo' : period.period_type}
+                  {period.period_type === 'break' ? '☕ Recreo' : period.period_type === 'lunch' ? '🍽️ Almuerzo' : (period.subject ?? period.period_type)}
                 </p>
                 <p className="text-[9px] opacity-60" style={{ color: colors.text }}>
                   {period.start_time.slice(0,5)} – {period.end_time.slice(0,5)}

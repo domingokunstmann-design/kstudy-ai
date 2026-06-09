@@ -9,9 +9,11 @@ import type { Task } from '@/types'
 import { OnboardingBanner } from '@/components/onboarding/onboarding-banner'
 import { StudyNowWidget } from '@/components/dashboard/study-now-widget'
 import { WeeklyProgress } from '@/components/dashboard/weekly-progress'
+import { RiskWidget } from '@/components/dashboard/risk-widget'
+import { PomodoroTimer } from '@/components/pomodoro/pomodoro-timer'
 
 export const metadata: Metadata = { title: 'Dashboard' }
-export const revalidate = 300
+export const revalidate = 0
 
 export default async function DashboardPage() {
   const supabase = await createClient()
@@ -159,6 +161,12 @@ export default async function DashboardPage() {
 
         {/* Panel derecho */}
         <div className="space-y-4">
+
+          {/* Índice de Riesgo Académico */}
+          <RiskWidget />
+
+          {/* Timer Pomodoro */}
+          <PomodoroTimer />
 
           {/* Progreso semanal */}
           <WeeklyProgress />

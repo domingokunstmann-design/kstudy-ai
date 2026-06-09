@@ -13,6 +13,7 @@ import { WorkloadDonut } from '@/components/dashboard/workload-donut'
 import { WeeklySummary } from '@/components/dashboard/weekly-summary'
 import { RecentAchievements } from '@/components/dashboard/recent-achievements'
 import { StudyNowWidget } from '@/components/dashboard/study-now-widget'
+import { PomodoroTimer } from '@/components/pomodoro/pomodoro-timer'
 
 export const metadata: Metadata = { title: 'Dashboard' }
 export const revalidate = 0
@@ -227,9 +228,10 @@ export default async function DashboardPage() {
         {/* Col 2: Plan de hoy */}
         <TodayPlanWidget />
 
-        {/* Col 3: Riesgo + ¿Qué estudiar? */}
+        {/* Col 3: Riesgo + Pomodoro + ¿Qué estudiar? */}
         <div className="space-y-4">
           <RiskWidget />
+          <PomodoroTimer />
           <StudyNowWidget />
         </div>
       </div>

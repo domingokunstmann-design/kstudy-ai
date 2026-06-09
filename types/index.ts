@@ -41,6 +41,9 @@ export interface Profile {
   last_gmail_sync: string | null
   last_classroom_sync: string | null
   reminders_enabled: boolean
+  grade_level: '7mo' | '8vo' | '1ro_medio' | '2do_medio' | '3ro_medio' | '4to_medio' | null
+  school_name: string | null
+  onboarding_completed: boolean
   created_at: string
   updated_at: string
 }

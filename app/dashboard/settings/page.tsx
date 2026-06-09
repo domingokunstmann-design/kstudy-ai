@@ -1,10 +1,11 @@
 import { Metadata } from 'next'
 import { createClient } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'
-import { Settings, User, Bell } from 'lucide-react'
+import { Settings, User, Bell, GraduationCap } from 'lucide-react'
 import { SyncButton } from '@/components/gmail/sync-button'
 import { CalendarSyncButton } from '@/components/settings/calendar-sync-button'
 import { RemindersToggle } from '@/components/settings/reminders-toggle'
+import { GradeLevelSelector } from '@/components/settings/grade-level-selector'
 import { formatRelativeDate, getInitials } from '@/lib/utils'
 import Image from 'next/image'
 import type { Profile } from '@/types'
@@ -90,6 +91,33 @@ export default async function SettingsPage() {
             <p className="text-sm text-white/40 mt-0.5">{p?.email}</p>
           </div>
         </div>
+      </div>
+
+      {/* Nivel escolar */}
+      <div className="section-card">
+        <div className="section-header">
+          <div className="flex items-center gap-2">
+            <GraduationCap className="w-4 h-4 text-white/30" />
+            <h2 className="text-sm font-semibold text-white">Nivel escolar</h2>
+          </div>
+          {p?.grade_level && (
+            <span
+              className="text-[11px] font-semibold px-2 py-0.5 rounded-full"
+              style={{ background: 'rgba(124,106,247,0.15)', color: '#a89dff', border: '1px solid rgba(124,106,247,0.25)' }}
+            >
+              {p.grade_level === '7mo' ? '7° Básico'
+               : p.grade_level === '8vo' ? '8° Básico'
+               : p.grade_level === '1ro_medio' ? 'I° Medio'
+               : p.grade_level === '2do_medio' ? 'II° Medio'
+               : p.grade_level === '3ro_medio' ? 'III° Medio'
+               : 'IV° Medio'}
+            </span>
+          )}
+        </div>
+        <GradeLevelSelector
+          currentLevel={p?.grade_level ?? null}
+          currentSchool={p?.school_name ?? null}
+        />
       </div>
 
       {/* Integraciones */}
